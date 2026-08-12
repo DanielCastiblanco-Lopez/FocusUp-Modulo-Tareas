@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title th:text="'FocusUp — ' + ${titulo}">FocusUp</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}"/>
+</head>
+<body>
+
+<header class="topbar">
+    <a th:href="@{/tareas}" class="brand">FocusUp</a>
+    <nav>
+        <a th:href="@{/tareas}">← Volver al listado</a>
+    </nav>
+</header>
+
+<div class="container" style="max-width:600px;">
+    <div class="card">
+        <div class="card-header">
+            <h2 th:text="${titulo}">Tarea</h2>
+        </div>
+
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+        <form th:action="@{/tareas/guardar}" th:object="${tarea}" method="post">
+
+            <input type="hidden" th:field="*{id}"/>
+
+            <div class="form-group">
+                <label for="titulo">Título *</label>
+                <input type="text"
+                       id="titulo"
+                       th:field="*{titulo}"
+                       placeholder="¿Qué necesitas hacer?"
+                       required/>
+                <div class="field-error"
+                     th:if="${#fields.hasErrors('titulo')}"
+                     th:errors="*{titulo}">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="prioridad">Prioridad *</label>
+                    <select id="prioridad" th:field="*{prioridad}">
+                        <option value="Alta">🔴 Alta</option>
+                        <option value="Media">🟡 Media</option>
+                        <option value="Baja">🟢 Baja</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="fechaLimite">Fecha límite</label>
+                    <input type="date"
+                           id="fechaLimite"
+                           th:field="*{fechaLimite}"/>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="nota">Nota (opcional)</label>
+                <textarea id="nota"
+                          th:field="*{nota}"
+                          rows="4"
+                          placeholder="Agrega contexto o detalles sobre esta tarea..."
+                          maxlength="500"></textarea>
+                <div class="field-error"
+                     th:if="${#fields.hasErrors('nota')}"
+                     th:errors="*{nota}">
+                </div>
+            </div>
+
+            <div style="display:flex; gap:12px; margin-top:8px;">
+                <button type="submit" class="btn btn-primary">
+                    <span th:text="${tarea.id == null} ? 'Crear tarea' : 'Guardar cambios'">Guardar</span>
+                </button>
+                <a th:href="@{/tareas}" class="btn btn-secondary">Cancelar</a>
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<footer>FocusUp © 2026 — GA7-220501096-AA3-EV01 | Daniel Castiblanco</footer>
+</body>
+</html>

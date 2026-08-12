@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>FocusUp — Tareas</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}"/>
+</head>
+<body>
+
+<header class="topbar">
+    <a th:href="@{/tareas}" class="brand">FocusUp</a>
+    <nav>
+        <a th:href="@{/tareas}">Tareas</a>
+        <a th:href="@{/tareas/nueva}" class="btn btn-primary btn-sm" style="margin-left:16px;">+ Nueva tarea</a>
+    </nav>
+</header>
+
+<div class="container">
+
+    <!-- Alertas -->
+    <div th:if="${exito}" class="alert alert-success" th:text="${exito}"></div>
+    <div th:if="${error}" class="alert alert-error"   th:text="${error}"></div>
+
+    <!-- Tarjetas de resumen -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-num" th:text="${tareas.size()}">0</div>
+            <div class="stat-label">Total</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num" style="color:#F39C12;" th:text="${totalPendientes}">0</div>
+            <div class="stat-label">Pendientes</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-num" style="color:#27AE60;" th:text="${totalCompletadas}">0</div>
+            <div class="stat-label">Completadas</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2>Gestión de Tareas</h2>
+        </div>
+
+        <!-- Filtros -->
+        <div class="filter-bar">
+            <a th:href="@{/tareas(filtro='todas')}"
+               th:classappend="${filtroActual == 'todas'} ? 'active'"
+               class="filter-btn">Todas</a>
+            <a th:href="@{/tareas(filtro='pendientes')}"
+               th:classappend="${filtroActual == 'pendientes'} ? 'active'"
+               class="filter-btn">Pendientes</a>
+            <a th:href="@{/tareas(filtro='completadas')}"
+               th:classappend="${filtroActual == 'completadas'} ? 'active'"
+               class="filter-btn">Completadas</a>
+        </div>
+
+        <!-- Estado vacío -->
+        <div th:if="${tareas.empty}" class="empty-state">
+            <div class="icon">📋</div>
+            <p>No hay tareas en esta categoría.</p>
+            <a th:href="@{/tareas/nueva}" class="btn btn-primary" style="margin-top:16px;">
+                Crear primera tarea
+            </a>
+        </div>
+
+        <!-- Tabla de tareas -->
+        <div th:unless="${tareas.empty}" class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Estado</th>
+                        <th>Título</th>
+                        <th>Prioridad</th>
+                        <th>Fecha límite</th>
+                        <th>Creada</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="tarea : ${tareas}"
+                        th:classappend="${tarea.completada} ? 'completada'">
+
+                        <td>
+                            <a th:href="@{/tareas/completar/{id}(id=${tarea.id})}"
+                               th:text="${tarea.completada} ? '✅' : '⬜'"
+                               title="Cambiar estado"
+                               style="font-size:1.2rem; text-decoration:none;">
+                            </a>
+                        </td>
+
+                        <td>
+                            <span class="tarea-titulo" th:text="${tarea.titulo}">Título</span>
+                            <div th:if="${tarea.nota != null and !tarea.nota.isEmpty()}"
+                                 style="font-size:.75rem; color:#7F8C8D; margin-top:2px;">
+                                📝 <span th:text="${#strings.abbreviate(tarea.nota, 50)}"></span>
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="badge"
+                                  th:text="${tarea.prioridad}"
+                                  th:classappend="${tarea.prioridad == 'Alta'} ? 'badge-alta' :
+                                                  (${tarea.prioridad == 'Baja'} ? 'badge-baja' : 'badge-media')">
+                            </span>
+                        </td>
+
+                        <td th:text="${tarea.fechaLimite != null} ? ${#temporals.format(tarea.fechaLimite,'dd/MM/yyyy')} : '—'">
+                        </td>
+
+                        <td th:text="${#temporals.format(tarea.fechaCreacion,'dd/MM/yyyy')}"></td>
+
+                        <td>
+                            <a th:href="@{/tareas/editar/{id}(id=${tarea.id})}"
+                               class="btn btn-secondary btn-sm">✏️ Editar</a>
+                            <a th:href="@{/tareas/eliminar/{id}(id=${tarea.id})}"
+                               class="btn btn-danger btn-sm"
+                               onclick="return confirm('¿Eliminar esta tarea?')">🗑️ Eliminar</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<footer>FocusUp © 2026 — GA7-220501096-AA3-EV01 | Daniel Castiblanco</footer>
+</body>
+</html>

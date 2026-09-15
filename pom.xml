@@ -63,6 +63,15 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- spring-security-crypto: SOLO la libreria de hashing (BCryptPasswordEncoder).
+             A proposito NO se usa spring-boot-starter-security completo, porque ese
+             starter activaria autenticacion HTTP automatica en todas las rutas
+             (incluyendo las del modulo de tareas que ya existia)-->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+        </dependency>
+
         <!-- DevTools: recarga automática en desarrollo -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

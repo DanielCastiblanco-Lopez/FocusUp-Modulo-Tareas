@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>FocusUp — Crear cuenta</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}"/>
+</head>
+<body>
+
+<header class="topbar">
+    <a th:href="@{/login}" class="brand">FocusUp</a>
+    <nav><a th:href="@{/login}">Ya tengo cuenta</a></nav>
+</header>
+
+<div class="container" style="max-width:640px;">
+    <div class="card">
+        <div class="card-header"><h2>Crear cuenta</h2></div>
+
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+        <form th:action="@{/registro}" th:object="${registro}" method="post">
+            <input type="hidden" name="_csrf" th:value="${csrf}"/>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="nombres">Nombres *</label>
+                    <input type="text" id="nombres" th:field="*{nombres}" maxlength="100"/>
+                    <div class="field-error" th:if="${#fields.hasErrors('nombres')}" th:errors="*{nombres}"></div>
+                </div>
+                <div class="form-group">
+                    <label for="apellidos">Apellidos *</label>
+                    <input type="text" id="apellidos" th:field="*{apellidos}" maxlength="100"/>
+                    <div class="field-error" th:if="${#fields.hasErrors('apellidos')}" th:errors="*{apellidos}"></div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="cedula">Cédula *</label>
+                    <input type="text" id="cedula" th:field="*{cedula}" maxlength="15" inputmode="numeric"/>
+                    <div class="field-error" th:if="${#fields.hasErrors('cedula')}" th:errors="*{cedula}"></div>
+                </div>
+                <div class="form-group">
+                    <label for="fechaNacimiento">Fecha de nacimiento *</label>
+                    <input type="date" id="fechaNacimiento" th:field="*{fechaNacimiento}"/>
+                    <div class="field-error" th:if="${#fields.hasErrors('fechaNacimiento')}" th:errors="*{fechaNacimiento}"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Correo *</label>
+                <input type="email" id="email" th:field="*{email}" maxlength="150"/>
+                <div class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="password">Contraseña * (mínimo 6)</label>
+                    <input type="password" id="password" name="password" autocomplete="new-password"/>
+                    <div class="field-error" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+                </div>
+                <div class="form-group">
+                    <label for="confirmar">Confirmar contraseña *</label>
+                    <input type="password" id="confirmar" name="confirmar" autocomplete="new-password"/>
+                    <div class="field-error" th:if="${#fields.hasErrors('confirmar')}" th:errors="*{confirmar}"></div>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">Crear cuenta y entrar</button>
+        </form>
+    </div>
+</div>
+
+<footer>FocusUp © 2026 | Daniel Castiblanco</footer>
+</body>
+</html>

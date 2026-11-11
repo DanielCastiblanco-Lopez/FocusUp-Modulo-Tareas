@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>FocusUp — Error</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}"/>
+</head>
+<body>
+
+<header class="topbar">
+    <a th:href="@{/tareas}" class="brand">FocusUp</a>
+</header>
+
+<div class="container" style="max-width:560px;">
+    <div class="card empty-state">
+        <div class="icon">⚠️</div>
+        <h2 th:text="${status}">Error</h2>
+        <!-- Mensajes fijos: nunca se muestran detalles técnicos del servidor al usuario. -->
+        <p th:if="${status == 403}">No tienes permiso para ver esta página, o el formulario venció. Vuelve a cargar la página e inténtalo de nuevo.</p>
+        <p th:if="${status == 404}">La página que buscas no existe.</p>
+        <p th:if="${status != 403 and status != 404}">Ocurrió un problema en el servidor. Inténtalo de nuevo más tarde.</p>
+        <a th:href="@{/tareas}" class="btn btn-primary" style="margin-top:16px;">Ir a mis tareas</a>
+    </div>
+</div>
+
+</body>
+</html>

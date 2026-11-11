@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!-- Barra superior para usuarios con sesión iniciada. "Usuarios" solo se muestra a administradores
+     (es solo comodidad: el servidor igual exige el rol ADMIN en /usuarios). -->
+<header th:fragment="nav" class="topbar">
+    <a th:href="@{/tareas}" class="brand">FocusUp</a>
+    <nav>
+        <a th:href="@{/tareas}">Tareas</a>
+        <a th:href="@{/cuenta}">Mi cuenta</a>
+        <a th:if="${usuarioActual != null and usuarioActual.esAdmin()}" th:href="@{/usuarios}">Usuarios</a>
+        <span class="user-chip" th:if="${usuarioActual != null}">
+            <span th:text="${usuarioActual.nombreCompleto}">Nombre</span>
+            <span class="badge badge-rol" th:text="${usuarioActual.rol.etiqueta}">Rol</span>
+        </span>
+        <form th:action="@{/logout}" method="post" class="inline-form">
+            <input type="hidden" name="_csrf" th:value="${csrf}"/>
+            <button type="submit" class="btn btn-secondary btn-sm">Salir</button>
+        </form>
+    </nav>
+</header>
+
+</body>
+</html>

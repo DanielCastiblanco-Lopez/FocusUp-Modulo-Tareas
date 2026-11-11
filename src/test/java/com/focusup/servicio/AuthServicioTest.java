@@ -1,6 +1,8 @@
 package com.focusup.servicio;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -8,9 +10,13 @@ import static org.mockito.Mockito.when;
 
 import com.focusup.dto.AuthResponse;
 import com.focusup.dto.LoginRequest;
+import com.focusup.dto.RegistroForm;
 import com.focusup.dto.RegistroRequest;
+import com.focusup.excepcion.ReglaNegocioException;
+import com.focusup.modelo.Rol;
 import com.focusup.modelo.Usuario;
 import com.focusup.repositorio.UsuarioRepository;
+import java.time.LocalDate;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -116,5 +122,69 @@ class AuthServicioTest {
         AuthResponse respuesta = authServicio.login(request);
 
         assertFalse(respuesta.isAutenticado());
+    }
+
+    // ── Integración de módulos: cuentas desactivadas y registro completo ──
+
+    @Test
+    void login_deUsuarioDesactivado_devuelveError() {
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        Usuario desactivado = new Usuario("baja@focusup.com", encoder.encode("claveCorrecta"));
+        desactivado.setActivo(false);
+
+        when(usuarioRepository.findByEmail("baja@focusup.com")).thenReturn(Optional.of(desactivado));
+
+        LoginRequest request = new LoginRequest();
+        request.setEmail("baja@focusup.com");
+        request.setPassword("claveCorrecta");
+
+        assertFalse(authServicio.login(request).isAutenticado());
+    }
+
+    @Test
+    void autenticar_normalizaElCorreo() {
+        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+        Usuario usuario = new Usuario("ana@focusup.com", encoder.encode("clave123"));
+        when(usuarioRepository.findByEmail("ana@focusup.com")).thenReturn(Optional.of(usuario));
+
+        assertTrue(authServicio.autenticar("  ANA@focusup.com ", "clave123").isPresent());
+    }
+
+    private RegistroForm formularioValido() {
+        RegistroForm form = new RegistroForm();
+        form.setNombres("Ana");
+        form.setApellidos("Pérez");
+        form.setCedula("1234567");
+        form.setEmail("Ana@FocusUp.com");
+        form.setFechaNacimiento(LocalDate.of(2000, 1, 15));
+        form.setPassword("clave123");
+        form.setConfirmar("clave123");
+        return form;
+    }
+
+    @Test
+    void registrarUsuario_siempreCreaRolUsuarioYGuardaHash() {
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Usuario creado = authServicio.registrarUsuario(formularioValido());
+
+        assertEquals(Rol.USUARIO, creado.getRol());
+        assertEquals("ana@focusup.com", creado.getEmail());
+        assertTrue(new BCryptPasswordEncoder().matches("clave123", creado.getPassword()));
+    }
+
+    @Test
+    void registrarUsuario_conContrasenasDistintas_lanzaExcepcion() {
+        RegistroForm form = formularioValido();
+        form.setConfirmar("otraClave");
+
+        assertThrows(ReglaNegocioException.class, () -> authServicio.registrarUsuario(form));
+    }
+
+    @Test
+    void registrarUsuario_conCedulaRepetida_lanzaExcepcion() {
+        when(usuarioRepository.existsByCedula("1234567")).thenReturn(true);
+
+        assertThrows(ReglaNegocioException.class, () -> authServicio.registrarUsuario(formularioValido()));
     }
 }

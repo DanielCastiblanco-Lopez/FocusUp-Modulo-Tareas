@@ -3,6 +3,10 @@ package com.focusup.controlador;
 import com.focusup.dto.AuthResponse;
 import com.focusup.dto.LoginRequest;
 import com.focusup.dto.RegistroRequest;
+import com.focusup.modelo.Usuario;
+import com.focusup.seguridad.Sesion;
+import jakarta.servlet.http.HttpServletRequest;
+import java.util.Optional;
 import com.focusup.servicio.AuthServicio;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -28,6 +32,11 @@ import org.springframework.web.bind.annotation.RestController;
  * Rutas disponibles (todas reciben el body en JSON, método POST):
  * POST /focusup/api/auth/registro
  * POST /focusup/api/auth/login
+ *
+ * POST /focusup/api/auth/logout
+ *
+ * Integración de módulos: un login correcto abre una sesión (cookie
+ * JSESSIONID) con la que se pueden usar las rutas protegidas /api/tareas.
  *
  * (El prefijo /focusup viene de server.servlet.context-path en
  * application.properties, igual que en el resto del proyecto).
@@ -86,12 +95,22 @@ public class AuthControlador {
      * específico está registrado o no.
      */
     @PostMapping("/login")
-    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
-        AuthResponse respuesta = authServicio.login(request);
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody LoginRequest request,
+                                              HttpServletRequest peticion) {
+        Optional<Usuario> usuario = authServicio.autenticar(request.getEmail(), request.getPassword());
 
-        if (respuesta.isAutenticado()) {
-            return ResponseEntity.ok(respuesta);
+        if (usuario.isPresent()) {
+            Sesion.iniciar(peticion, usuario.get());
+            return ResponseEntity.ok(new AuthResponse(true, "Autenticación satisfactoria"));
         }
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(respuesta);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new AuthResponse(false, "Error en la autenticación"));
+    }
+
+    /** Cierra la sesión de la API. Responde 200 aunque no hubiera sesión. */
+    @PostMapping("/logout")
+    public ResponseEntity<AuthResponse> logout(HttpServletRequest peticion) {
+        Sesion.cerrar(peticion);
+        return ResponseEntity.ok(new AuthResponse(false, "Sesión cerrada"));
     }
 }

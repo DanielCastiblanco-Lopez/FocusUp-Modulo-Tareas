@@ -1,28 +1,40 @@
 package com.focusup.controlador;
 
-import com.focusup.modelo.Tarea;
+import com.focusup.dto.TareaRequest;
+import com.focusup.modelo.Usuario;
+import com.focusup.seguridad.Sesion;
 import com.focusup.servicio.TareaServicio;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
- * Controlador Spring MVC para el módulo de tareas de FocusUp.
- * Maneja las peticiones HTTP GET y POST del CRUD completo.
+ * Pantalla de tareas (vistas Thymeleaf). Es la pantalla principal después de iniciar sesión.
  *
- * Rutas disponibles:
- * GET  /tareas              → lista todas las tareas
- * GET  /tareas/nueva        → formulario de nueva tarea
- * POST /tareas/guardar      → crea o actualiza una tarea
- * GET  /tareas/editar/{id}  → formulario de edición
- * GET  /tareas/completar/{id} → cambia el estado de completado
- * GET  /tareas/eliminar/{id}  → elimina la tarea
+ * Cada usuario trabaja SOLO con sus tareas: el dueño sale siempre de la
+ * sesión, nunca del formulario. Las acciones que cambian datos son POST
+ * con token CSRF (antes eran enlaces GET).
+ *
+ * Rutas:
+ * GET  /tareas                    lista (filtro: todas | pendientes | completadas)
+ * GET  /tareas/nueva              formulario de tarea nueva
+ * POST /tareas                    crea la tarea
+ * GET  /tareas/{id}/editar        formulario de edición
+ * POST /tareas/{id}               guarda los cambios
+ * POST /tareas/{id}/completar     alterna completada/pendiente
+ * POST /tareas/{id}/eliminar      elimina la tarea
  *
  * @author Daniel Castiblanco
- * @version 1.0
+ * @version 2.0
  */
 @Controller
 @RequestMapping("/tareas")
@@ -35,32 +47,53 @@ public class TareaControlador {
     }
 
     @GetMapping
-    public String listar(@RequestParam(required = false) String filtro, Model model) {
-        var tareas = switch (filtro != null ? filtro : "todas") {
-            case "pendientes"  -> tareaServicio.obtenerPendientes();
-            case "completadas" -> tareaServicio.obtenerCompletadas();
-            default            -> tareaServicio.obtenerTodas();
+    public String listar(@RequestParam(required = false) String filtro,
+                         HttpServletRequest request, Model model) {
+        Long usuarioId = Sesion.usuarioActual(request).getId();
+        String filtroActual = filtro != null ? filtro : "todas";
+
+        var tareas = switch (filtroActual) {
+            case "pendientes"  -> tareaServicio.obtenerPendientes(usuarioId);
+            case "completadas" -> tareaServicio.obtenerCompletadas(usuarioId);
+            default            -> tareaServicio.obtenerTodas(usuarioId);
         };
-        model.addAttribute("tareas",          tareas);
-        model.addAttribute("filtroActual",    filtro != null ? filtro : "todas");
-        model.addAttribute("totalPendientes", tareaServicio.contarPendientes());
-        model.addAttribute("totalCompletadas",tareaServicio.contarCompletadas());
+        model.addAttribute("tareas", tareas);
+        model.addAttribute("filtroActual", filtroActual);
+        model.addAttribute("totalPendientes", tareaServicio.contarPendientes(usuarioId));
+        model.addAttribute("totalCompletadas", tareaServicio.contarCompletadas(usuarioId));
         return "tareas/listar";
     }
 
     @GetMapping("/nueva")
     public String nueva(Model model) {
-        model.addAttribute("tarea",  new Tarea());
-        model.addAttribute("titulo", "Nueva tarea");
+        prepararFormulario(model, new TareaRequest(), null);
         return "tareas/formulario";
     }
 
-    @GetMapping("/editar/{id}")
-    public String editar(@PathVariable Long id, Model model,
-                         RedirectAttributes redirect) {
-        return tareaServicio.obtenerPorId(id).map(tarea -> {
-            model.addAttribute("tarea",  tarea);
-            model.addAttribute("titulo", "Editar tarea");
+    @PostMapping
+    public String crear(@Valid @ModelAttribute("tarea") TareaRequest tarea,
+                        BindingResult resultado,
+                        HttpServletRequest request, Model model,
+                        RedirectAttributes redirect) {
+        if (resultado.hasErrors()) {
+            model.addAttribute("tareaId", null);
+            model.addAttribute("titulo", "Nueva tarea");
+            return "tareas/formulario";
+        }
+        Usuario usuario = Sesion.usuarioActual(request);
+        var entidad = new com.focusup.modelo.Tarea();
+        tarea.copiarA(entidad);
+        tareaServicio.crear(entidad, usuario.getId());
+        redirect.addFlashAttribute("exito", "Tarea creada exitosamente.");
+        return "redirect:/tareas";
+    }
+
+    @GetMapping("/{id}/editar")
+    public String editar(@PathVariable Long id, HttpServletRequest request,
+                         Model model, RedirectAttributes redirect) {
+        Long usuarioId = Sesion.usuarioActual(request).getId();
+        return tareaServicio.obtenerPorId(id, usuarioId).map(tarea -> {
+            prepararFormulario(model, TareaRequest.desde(tarea), id);
             return "tareas/formulario";
         }).orElseGet(() -> {
             redirect.addFlashAttribute("error", "Tarea no encontrada.");
@@ -68,25 +101,33 @@ public class TareaControlador {
         });
     }
 
-    @PostMapping("/guardar")
-    public String guardar(@Valid @ModelAttribute("tarea") Tarea tarea,
-                          BindingResult resultado,
-                          Model model,
-                          RedirectAttributes redirect) {
+    @PostMapping("/{id}")
+    public String actualizar(@PathVariable Long id,
+                             @Valid @ModelAttribute("tarea") TareaRequest tarea,
+                             BindingResult resultado,
+                             HttpServletRequest request, Model model,
+                             RedirectAttributes redirect) {
         if (resultado.hasErrors()) {
-            model.addAttribute("titulo", tarea.getId() == null ? "Nueva tarea" : "Editar tarea");
+            model.addAttribute("tareaId", id);
+            model.addAttribute("titulo", "Editar tarea");
             return "tareas/formulario";
         }
-        boolean esNueva = tarea.getId() == null;
-        tareaServicio.guardar(tarea);
-        redirect.addFlashAttribute("exito",
-            esNueva ? "Tarea creada exitosamente." : "Tarea actualizada exitosamente.");
-        return "redirect:/tareas";
+        Long usuarioId = Sesion.usuarioActual(request).getId();
+        return tareaServicio.obtenerPorId(id, usuarioId).map(entidad -> {
+            tarea.copiarA(entidad);
+            tareaServicio.actualizar(entidad);
+            redirect.addFlashAttribute("exito", "Tarea actualizada exitosamente.");
+            return "redirect:/tareas";
+        }).orElseGet(() -> {
+            redirect.addFlashAttribute("error", "Tarea no encontrada.");
+            return "redirect:/tareas";
+        });
     }
 
-    @GetMapping("/completar/{id}")
-    public String completar(@PathVariable Long id, RedirectAttributes redirect) {
-        tareaServicio.cambiarEstado(id).ifPresentOrElse(
+    @PostMapping("/{id}/completar")
+    public String completar(@PathVariable Long id, HttpServletRequest request, RedirectAttributes redirect) {
+        Long usuarioId = Sesion.usuarioActual(request).getId();
+        tareaServicio.cambiarEstado(id, usuarioId).ifPresentOrElse(
             t -> redirect.addFlashAttribute("exito",
                     t.isCompletada() ? "Tarea completada." : "Tarea marcada como pendiente."),
             () -> redirect.addFlashAttribute("error", "Tarea no encontrada.")
@@ -94,14 +135,20 @@ public class TareaControlador {
         return "redirect:/tareas";
     }
 
-    @GetMapping("/eliminar/{id}")
-    public String eliminar(@PathVariable Long id, RedirectAttributes redirect) {
-        if (tareaServicio.obtenerPorId(id).isPresent()) {
-            tareaServicio.eliminar(id);
+    @PostMapping("/{id}/eliminar")
+    public String eliminar(@PathVariable Long id, HttpServletRequest request, RedirectAttributes redirect) {
+        Long usuarioId = Sesion.usuarioActual(request).getId();
+        if (tareaServicio.eliminar(id, usuarioId)) {
             redirect.addFlashAttribute("exito", "Tarea eliminada correctamente.");
         } else {
             redirect.addFlashAttribute("error", "Tarea no encontrada.");
         }
         return "redirect:/tareas";
+    }
+
+    private void prepararFormulario(Model model, TareaRequest tarea, Long tareaId) {
+        model.addAttribute("tarea", tarea);
+        model.addAttribute("tareaId", tareaId);
+        model.addAttribute("titulo", tareaId == null ? "Nueva tarea" : "Editar tarea");
     }
 }

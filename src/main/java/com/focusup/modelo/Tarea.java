@@ -94,6 +94,17 @@ public class Tarea {
     @Column(name = "fecha_completada")
     private LocalDateTime fechaCompletada;
 
+    // ── Dueño de la tarea ─────────────────────────────────────────────────────
+
+    /**
+     * Id del usuario dueño de la tarea (integración de módulos). Cada usuario
+     * solo ve y modifica sus propias tareas; las consultas del servicio
+     * siempre filtran por este campo. Es nulo solo en tareas creadas antes de
+     * la integración: al arrancar, la aplicación se las asigna al administrador.
+     */
+    @Column(name = "usuario_id")
+    private Long usuarioId;
+
     // ── Constructores ─────────────────────────────────────────────────────────
 
     /** Constructor vacío requerido por JPA/Hibernate. */
@@ -135,6 +146,9 @@ public class Tarea {
 
     public LocalDateTime getFechaCompletada()   { return fechaCompletada; }
     public void setFechaCompletada(LocalDateTime f) { this.fechaCompletada = f; }
+
+    public Long getUsuarioId()                  { return usuarioId; }
+    public void setUsuarioId(Long usuarioId)    { this.usuarioId = usuarioId; }
 
     // ── Métodos de utilidad ───────────────────────────────────────────────────
 

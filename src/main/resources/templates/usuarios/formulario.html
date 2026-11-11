@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>FocusUp — Editar usuario</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}"/>
+</head>
+<body>
+
+<header th:replace="~{fragments/nav :: nav}"></header>
+
+<div class="container" style="max-width:700px;">
+
+    <p><a th:href="@{/usuarios}">← Volver al listado</a></p>
+
+    <div th:if="${exito}" class="alert alert-success" th:text="${exito}"></div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2>Editar usuario: <span th:text="${objetivo.nombreCompleto}">Nombre</span></h2>
+        </div>
+
+        <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+        <form th:action="@{/usuarios/{id}(id=${objetivo.id})}" th:object="${form}" method="post">
+            <input type="hidden" name="_csrf" th:value="${csrf}"/>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="nombres">Nombres *</label>
+                    <input type="text" id="nombres" th:field="*{nombres}" maxlength="100"/>
+                    <div class="field-error" th:if="${#fields.hasErrors('nombres')}" th:errors="*{nombres}"></div>
+                </div>
+                <div class="form-group">
+                    <label for="apellidos">Apellidos *</label>
+                    <input type="text" id="apellidos" th:field="*{apellidos}" maxlength="100"/>
+                    <div class="field-error" th:if="${#fields.hasErrors('apellidos')}" th:errors="*{apellidos}"></div>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="cedula">Cédula *</label>
+                    <input type="text" id="cedula" th:field="*{cedula}" maxlength="15" inputmode="numeric"/>
+                    <div class="field-error" th:if="${#fields.hasErrors('cedula')}" th:errors="*{cedula}"></div>
+                </div>
+                <div class="form-group">
+                    <label for="fechaNacimiento">Fecha de nacimiento *</label>
+                    <input type="date" id="fechaNacimiento" th:field="*{fechaNacimiento}"/>
+                    <div class="field-error" th:if="${#fields.hasErrors('fechaNacimiento')}" th:errors="*{fechaNacimiento}"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Correo *</label>
+                <input type="email" id="email" th:field="*{email}" maxlength="150"/>
+                <div class="field-error" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="rol">Rol *</label>
+                    <select id="rol" th:field="*{rol}">
+                        <option th:each="r : ${roles}" th:value="${r}" th:text="${r.etiqueta}">Rol</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="activo">Estado</label>
+                    <select id="activo" name="activo">
+                        <option value="true" th:selected="*{activo}">Activo</option>
+                        <option value="false" th:selected="*{!activo}">Inactivo</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+        </form>
+    </div>
+
+    <div class="card">
+        <div class="card-header"><h2>Restablecer contraseña</h2></div>
+
+        <div th:if="${errorContrasena}" class="alert alert-error" th:text="${errorContrasena}"></div>
+
+        <form th:action="@{/usuarios/{id}/contrasena(id=${objetivo.id})}" th:object="${cambio}" method="post">
+            <input type="hidden" name="_csrf" th:value="${csrf}"/>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="nueva">Nueva contraseña * (mínimo 6)</label>
+                    <input type="password" id="nueva" name="nueva" autocomplete="new-password"/>
+                    <div class="field-error" th:if="${#fields.hasErrors('nueva')}" th:errors="*{nueva}"></div>
+                </div>
+                <div class="form-group">
+                    <label for="confirmar">Confirmar *</label>
+                    <input type="password" id="confirmar" name="confirmar" autocomplete="new-password"/>
+                    <div class="field-error" th:if="${#fields.hasErrors('confirmar')}" th:errors="*{confirmar}"></div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-secondary">Restablecer contraseña</button>
+        </form>
+    </div>
+</div>
+
+<footer>FocusUp © 2026 | Daniel Castiblanco</footer>
+</body>
+</html>

@@ -13,8 +13,9 @@
     <packaging>jar</packaging>
     <name>FocusUp - Módulo de Tareas</name>
     <description>
-        Módulo de Gestión de Tareas de FocusUp desarrollado con Spring Boot.
-        Evidencia GA7-220501096-AA3-EV01 — SENA Análisis y Desarrollo de Software.
+        FocusUp con módulos integrados: gestión de tareas y gestión de usuarios
+        (registro, login, roles administrador/usuario) en una sola aplicación Spring Boot.
+        SENA Análisis y Desarrollo de Software.
     </description>
 
     <!-- ── Versión base de Spring Boot ── -->
@@ -63,10 +64,7 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- spring-security-crypto: SOLO la libreria de hashing (BCryptPasswordEncoder).
-             A proposito NO se usa spring-boot-starter-security completo, porque ese
-             starter activaria autenticacion HTTP automatica en todas las rutas
-             (incluyendo las del modulo de tareas que ya existia)-->
+        <!-- spring-security-crypto-->
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-crypto</artifactId>
@@ -78,6 +76,14 @@
             <artifactId>spring-boot-devtools</artifactId>
             <scope>runtime</scope>
             <optional>true</optional>
+        </dependency>
+
+        <!-- H2: base de datos en memoria SOLO para las pruebas de integración.
+             No se incluye en la aplicación final. -->
+        <dependency>
+            <groupId>com.h2database</groupId>
+            <artifactId>h2</artifactId>
+            <scope>test</scope>
         </dependency>
 
         <!-- Tests -->

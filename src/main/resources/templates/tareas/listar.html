@@ -8,13 +8,7 @@
 </head>
 <body>
 
-<header class="topbar">
-    <a th:href="@{/tareas}" class="brand">FocusUp</a>
-    <nav>
-        <a th:href="@{/tareas}">Tareas</a>
-        <a th:href="@{/tareas/nueva}" class="btn btn-primary btn-sm" style="margin-left:16px;">+ Nueva tarea</a>
-    </nav>
-</header>
+<header th:replace="~{fragments/nav :: nav}"></header>
 
 <div class="container">
 
@@ -40,7 +34,8 @@
 
     <div class="card">
         <div class="card-header">
-            <h2>Gestión de Tareas</h2>
+            <h2>Mis tareas</h2>
+            <a th:href="@{/tareas/nueva}" class="btn btn-primary btn-sm">+ Nueva tarea</a>
         </div>
 
         <!-- Filtros -->
@@ -83,11 +78,11 @@
                         th:classappend="${tarea.completada} ? 'completada'">
 
                         <td>
-                            <a th:href="@{/tareas/completar/{id}(id=${tarea.id})}"
-                               th:text="${tarea.completada} ? '✅' : '⬜'"
-                               title="Cambiar estado"
-                               style="font-size:1.2rem; text-decoration:none;">
-                            </a>
+                            <form th:action="@{/tareas/{id}/completar(id=${tarea.id})}" method="post" class="inline-form">
+                                <input type="hidden" name="_csrf" th:value="${csrf}"/>
+                                <button type="submit" class="linklike" title="Cambiar estado"
+                                        th:text="${tarea.completada} ? '✅' : '⬜'"></button>
+                            </form>
                         </td>
 
                         <td>
@@ -112,11 +107,13 @@
                         <td th:text="${#temporals.format(tarea.fechaCreacion,'dd/MM/yyyy')}"></td>
 
                         <td>
-                            <a th:href="@{/tareas/editar/{id}(id=${tarea.id})}"
+                            <a th:href="@{/tareas/{id}/editar(id=${tarea.id})}"
                                class="btn btn-secondary btn-sm">✏️ Editar</a>
-                            <a th:href="@{/tareas/eliminar/{id}(id=${tarea.id})}"
-                               class="btn btn-danger btn-sm"
-                               onclick="return confirm('¿Eliminar esta tarea?')">🗑️ Eliminar</a>
+                            <form th:action="@{/tareas/{id}/eliminar(id=${tarea.id})}" method="post" class="inline-form"
+                                  onsubmit="return confirm('¿Eliminar esta tarea?')">
+                                <input type="hidden" name="_csrf" th:value="${csrf}"/>
+                                <button type="submit" class="btn btn-danger btn-sm">🗑️ Eliminar</button>
+                            </form>
                         </td>
                     </tr>
                 </tbody>
@@ -125,6 +122,6 @@
     </div>
 </div>
 
-<footer>FocusUp © 2026 — GA7-220501096-AA3-EV01 | Daniel Castiblanco</footer>
+<footer>FocusUp © 2026 | Daniel Castiblanco</footer>
 </body>
 </html>

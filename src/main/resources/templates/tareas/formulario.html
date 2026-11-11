@@ -8,12 +8,7 @@
 </head>
 <body>
 
-<header class="topbar">
-    <a th:href="@{/tareas}" class="brand">FocusUp</a>
-    <nav>
-        <a th:href="@{/tareas}">← Volver al listado</a>
-    </nav>
-</header>
+<header th:replace="~{fragments/nav :: nav}"></header>
 
 <div class="container" style="max-width:600px;">
     <div class="card">
@@ -23,9 +18,10 @@
 
         <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
 
-        <form th:action="@{/tareas/guardar}" th:object="${tarea}" method="post">
+        <form th:action="${tareaId == null} ? @{/tareas} : @{/tareas/{id}(id=${tareaId})}"
+              th:object="${tarea}" method="post">
 
-            <input type="hidden" th:field="*{id}"/>
+            <input type="hidden" name="_csrf" th:value="${csrf}"/>
 
             <div class="form-group">
                 <label for="titulo">Título *</label>
@@ -72,7 +68,7 @@
 
             <div style="display:flex; gap:12px; margin-top:8px;">
                 <button type="submit" class="btn btn-primary">
-                    <span th:text="${tarea.id == null} ? 'Crear tarea' : 'Guardar cambios'">Guardar</span>
+                    <span th:text="${tareaId == null} ? 'Crear tarea' : 'Guardar cambios'">Guardar</span>
                 </button>
                 <a th:href="@{/tareas}" class="btn btn-secondary">Cancelar</a>
             </div>
@@ -81,6 +77,6 @@
     </div>
 </div>
 
-<footer>FocusUp © 2026 — GA7-220501096-AA3-EV01 | Daniel Castiblanco</footer>
+<footer>FocusUp © 2026 | Daniel Castiblanco</footer>
 </body>
 </html>

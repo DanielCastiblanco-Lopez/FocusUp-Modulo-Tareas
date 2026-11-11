@@ -126,3 +126,16 @@ footer { text-align: center; color: var(--muted); font-size: .75rem; padding: 24
     .container { padding: 0 12px; }
     td, th     { padding: 8px 10px; }
 }
+
+/* ── Integración de módulos: usuarios, roles y formularios en línea ── */
+.topbar nav { display: flex; align-items: center; }
+.user-chip { color: #BDC3C7; font-size: .82rem; margin-left: 20px; display: inline-flex; align-items: center; gap: 8px; }
+.badge-rol { background: #5D6D7E; }
+.inline-form { display: inline; margin: 0; margin-left: 8px; }
+.inline-form:first-child { margin-left: 0; }
+.linklike { background: none; border: none; cursor: pointer; font-size: 1.2rem; padding: 0; }
+.aviso { color: var(--muted); font-size: .85rem; margin: 12px 0; }
+.container a { color: #13a085; }
+.container a.btn { color: inherit; }
+.container a.btn-primary { color: var(--white); }
+.container a.btn-danger  { color: var(--white); }

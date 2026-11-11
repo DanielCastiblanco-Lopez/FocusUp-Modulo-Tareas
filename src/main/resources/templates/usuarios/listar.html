@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <title>FocusUp — Usuarios</title>
+    <link rel="stylesheet" th:href="@{/css/estilos.css}"/>
+</head>
+<body>
+
+<header th:replace="~{fragments/nav :: nav}"></header>
+
+<div class="container">
+
+    <div th:if="${exito}" class="alert alert-success" th:text="${exito}"></div>
+    <div th:if="${error}" class="alert alert-error" th:text="${error}"></div>
+
+    <div class="card">
+        <div class="card-header">
+            <h2>Administración de usuarios</h2>
+            <span class="aviso" th:text="${usuarios.size()} + ' usuarios'">0 usuarios</span>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nombre</th>
+                        <th>Correo</th>
+                        <th>Cédula</th>
+                        <th>Rol</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="u : ${usuarios}" th:classappend="${!u.activo} ? 'completada'">
+                        <td th:text="${u.nombreCompleto}">Nombre</td>
+                        <td th:text="${u.email}">correo</td>
+                        <td th:text="${u.cedula != null} ? ${u.cedula} : '—'">—</td>
+                        <td><span class="badge badge-rol" th:text="${u.rol.etiqueta}">Rol</span></td>
+                        <td th:text="${u.activo} ? 'Activo' : 'Inactivo'">Activo</td>
+                        <td>
+                            <a th:href="@{/usuarios/{id}/editar(id=${u.id})}" class="btn btn-secondary btn-sm">Editar</a>
+
+                            <form th:if="${u.activo and u.id != usuarioActual.id}"
+                                  th:action="@{/usuarios/{id}/estado(id=${u.id})}" method="post" class="inline-form"
+                                  onsubmit="return confirm('¿Desactivar este usuario? No podrá iniciar sesión.')">
+                                <input type="hidden" name="_csrf" th:value="${csrf}"/>
+                                <input type="hidden" name="activo" value="false"/>
+                                <button type="submit" class="btn btn-danger btn-sm">Desactivar</button>
+                            </form>
+
+                            <form th:unless="${u.activo}"
+                                  th:action="@{/usuarios/{id}/estado(id=${u.id})}" method="post" class="inline-form">
+                                <input type="hidden" name="_csrf" th:value="${csrf}"/>
+                                <input type="hidden" name="activo" value="true"/>
+                                <button type="submit" class="btn btn-success btn-sm">Activar</button>
+                            </form>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<footer>FocusUp © 2026 | Daniel Castiblanco</footer>
+</body>
+</html>
